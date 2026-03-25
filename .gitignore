@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.swp
+.idea/
+.vscode/
+.env
+.env.*
+docs/prd/
+docs/prd-source-code-test/
+tmp/
