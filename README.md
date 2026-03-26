@@ -16,6 +16,7 @@ A curated collection of AI-friendly skills for code analysis, documentation gene
 | Skill | Description |
 |-------|-------------|
 | [generate-prd-from-code](skills/generate-prd-from-code/SKILL.md) | Reverse-engineer a codebase into a business-first PRD |
+| [project-md-reconstructor](skills/project-md-reconstructor/SKILL.md) | Recreate the old OpenSpec project.md workflow and generate a reuse-aware docs/project.md from an existing repository |
 
 ## Repository Layout
 
