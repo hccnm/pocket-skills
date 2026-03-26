@@ -10,12 +10,10 @@ metadata:
 
 # Project MD Reconstructor
 
-Use the main skill at `../../SKILL.md`.
-
-Also read:
-
 - `../../references/project-template.md`
 - `../../references/scanning-rules.md`
+
+Use this skill to reconstruct `docs/project.md` from repository evidence.
 
 When invoked:
 
@@ -23,3 +21,4 @@ When invoked:
 2. Scan the repository.
 3. Fill the template with project purpose, tech stack, conventions, reusable building blocks, constraints, and dependencies.
 4. Keep the structure unchanged.
+5. Prefer evidence-backed statements and mark unclear conclusions as inferred or unknown.

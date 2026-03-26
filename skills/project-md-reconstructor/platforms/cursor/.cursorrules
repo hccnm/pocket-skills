@@ -1,6 +1,5 @@
 # Project MD Reconstructor
 
-Use `../../SKILL.md` as the main instruction source.
 Also read:
 - `../../references/project-template.md`
 - `../../references/scanning-rules.md`
@@ -10,3 +9,4 @@ Goal:
 - keep the fixed template structure
 - fill it from repository evidence
 - explicitly document reusable building blocks and extension points so future work reuses existing structures
+- prefer evidence-backed statements and mark unclear conclusions as inferred or unknown

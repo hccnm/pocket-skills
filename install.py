@@ -459,6 +459,22 @@ def strip_frontmatter(markdown: str) -> str:
     return remainder if remainder else markdown
 
 
+def extract_frontmatter_description(markdown: str) -> str | None:
+    """从 YAML frontmatter 中提取 description。"""
+    if not markdown.startswith("---\n"):
+        return None
+
+    frontmatter, _, _ = markdown[4:].partition("\n---\n")
+    if not frontmatter:
+        return None
+
+    match = re.search(r"^description:\s*(.+)$", frontmatter, flags=re.MULTILINE)
+    if not match:
+        return None
+
+    return match.group(1).strip().strip("\"'")
+
+
 def get_command_target(skill_name: str, tool_key: str) -> Path | None:
     """获取命令型平台的命令文件路径。"""
     config = TOOL_CONFIGS[tool_key]
@@ -481,10 +497,7 @@ def write_command_file(
         return
 
     prompt = strip_frontmatter(fixed_content).strip()
-    command_description = (
-        "Generate a business-first PRD from the current repository and ask for "
-        "missing frontend/backend evidence before generating when needed."
-    )
+    command_description = extract_frontmatter_description(fixed_content) or skill.description
     command_target.parent.mkdir(parents=True, exist_ok=True)
     command_target.write_text(
         "\n".join(
