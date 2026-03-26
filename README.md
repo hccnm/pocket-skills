@@ -1,5 +1,7 @@
 # Pocket Skills
 
+[English](README.md) | [中文](docs/README_CN.md)
+
 A curated collection of AI-friendly skills for code analysis, documentation generation, and more. Each skill is self-contained with platform adapters for Claude Code, Cursor, Codex, Gemini CLI, and other AI coding assistants.
 
 ## Why Pocket Skills?
