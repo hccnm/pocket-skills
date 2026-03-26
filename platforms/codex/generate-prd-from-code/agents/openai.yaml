@@ -1,4 +1,0 @@
-interface:
-  display_name: "Generate PRD from Code"
-  short_description: "Generate business-first PRDs from live UI or code"
-  default_prompt: "Use $generate-prd-from-code to generate a business-first PRD for this repository. If a frontend URL is available, prioritize live pages and page-level product details."

@@ -1,0 +1,1043 @@
+#!/usr/bin/env python3
+"""
+Pocket Skills - 安装向导
+
+交互式安装脚本，支持将 skills 安装到 Claude Code、Cursor、Codex 和 Gemini CLI。
+支持 Windows、macOS 和 Linux。
+
+功能:
+- 自动发现 skills 目录中的可用技能包
+- 交互式多选界面（空格选择，箭头移动）
+- 命令行参数支持（非交互模式）
+- 卸载已安装的 skills
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import platform
+import re
+import shutil
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import NamedTuple
+
+
+# ============================================================================
+# 常量定义
+# ============================================================================
+
+MIN_PYTHON_VERSION = (3, 8)
+SKILLS_DIR = "skills"
+
+# 工具配置
+TOOL_CONFIGS = {
+    "claude-code": {
+        "name": "Claude Code",
+        "skill_dir": ".claude/skills",
+    },
+    "cursor": {
+        "name": "Cursor",
+        "skill_dir": ".cursor/skills",
+    },
+    "codex": {
+        "name": "Codex",
+        "skill_dir": ".codex/skills",
+    },
+    "gemini-code": {
+        "name": "Gemini CLI",
+        "skill_dir": ".gemini/pocket-skills",
+        "command_dir": ".gemini/commands",
+        "command_ext": ".toml",
+    },
+}
+
+
+# ============================================================================
+# 数据结构
+# ============================================================================
+
+
+@dataclass
+class SkillInfo:
+    """Skill 信息"""
+
+    name: str
+    path: Path
+    description: str = ""
+
+
+class InstallResult(NamedTuple):
+    """安装结果"""
+
+    skill: str
+    tool: str
+    success: bool
+    path: Path | None = None
+    error: str | None = None
+
+
+class UninstallResult(NamedTuple):
+    """卸载结果"""
+
+    skill: str
+    tool: str
+    success: bool
+    path: Path | None = None
+    error: str | None = None
+
+
+# ============================================================================
+# 工具函数
+# ============================================================================
+
+
+def check_python_version() -> bool:
+    """检查 Python 版本是否满足要求"""
+    if sys.version_info < MIN_PYTHON_VERSION:
+        print(f"\n❌ 错误: 需要 Python {MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}+")
+        print(f"   当前版本: Python {sys.version_info.major}.{sys.version_info.minor}")
+        return False
+    return True
+
+
+def detect_os() -> str:
+    """检测操作系统"""
+    system = platform.system().lower()
+    if system == "darwin":
+        return "macOS"
+    elif system == "windows":
+        return "Windows"
+    elif system == "linux":
+        return "Linux"
+    else:
+        return system.capitalize()
+
+
+def get_home_dir() -> Path:
+    """获取用户主目录"""
+    return Path.home()
+
+
+def get_script_dir() -> Path:
+    """获取脚本所在目录（项目根目录）"""
+    return Path(__file__).parent.resolve()
+
+
+def check_questionary() -> bool:
+    """检查 questionary 库是否可用"""
+    try:
+        import questionary  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+# ============================================================================
+# Skill 发现机制
+# ============================================================================
+
+
+def discover_skills() -> list[SkillInfo]:
+    """
+    发现 skills 目录下所有有效的 skill 包
+
+    一个有效的 skill 包定义为：包含 SKILL.md 文件的目录
+    """
+    script_dir = get_script_dir()
+    skills_root = script_dir / SKILLS_DIR
+    skills: list[SkillInfo] = []
+
+    if not skills_root.exists():
+        return skills
+
+    for skill_dir in skills_root.iterdir():
+        if skill_dir.is_dir():
+            skill_file = skill_dir / "SKILL.md"
+            if skill_file.exists():
+                skill_info = get_skill_info(skill_dir)
+                skills.append(skill_info)
+
+    # 按名称排序
+    skills.sort(key=lambda s: s.name)
+    return skills
+
+
+def get_skill_info(skill_path: Path) -> SkillInfo:
+    """
+    从 SKILL.md 文件提取 skill 元信息
+    """
+    skill_file = skill_path / "SKILL.md"
+    name = skill_path.name
+    description = ""
+
+    if skill_file.exists():
+        try:
+            content = skill_file.read_text(encoding="utf-8")
+            description_match = re.search(r"^description:\s*(.+)$", content, flags=re.MULTILINE)
+            if description_match:
+                description = description_match.group(1).strip().strip("\"'")
+            else:
+                # 回退到正文中的首行有效文本
+                lines = content.strip().split("\n")
+                for line in lines:
+                    line = line.strip()
+                    if line and not line.startswith(("#", "---")):
+                        description = line[:80]  # 限制描述长度
+                        break
+        except Exception:
+            pass
+
+    return SkillInfo(name=name, path=skill_path, description=description)
+
+
+def detect_installed_skills(tool_key: str) -> list[SkillInfo]:
+    """
+    检测指定工具目录下已安装的 skills
+    """
+    config = TOOL_CONFIGS[tool_key]
+    home = get_home_dir()
+    skill_dir = home / config["skill_dir"]
+    skills: list[SkillInfo] = []
+
+    if not skill_dir.exists():
+        return skills
+
+    for installed_skill in skill_dir.iterdir():
+        if installed_skill.is_dir():
+            skill_file = installed_skill / "SKILL.md"
+            if skill_file.exists():
+                skill_info = SkillInfo(
+                    name=installed_skill.name,
+                    path=installed_skill,
+                    description="",
+                )
+                skills.append(skill_info)
+
+    skills.sort(key=lambda s: s.name)
+    return skills
+
+
+# ============================================================================
+# 显示函数
+# ============================================================================
+
+
+def show_banner() -> None:
+    """显示欢迎横幅"""
+    print("\n" + "=" * 50)
+    print("  Pocket Skills - 安装向导")
+    print("=" * 50)
+
+
+def show_progress(message: str, indent: int = 0) -> None:
+    """显示进度信息"""
+    prefix = "  " * indent
+    print(f"{prefix}{message}")
+
+
+def show_main_menu() -> str:
+    """显示主菜单，让用户选择安装或卸载"""
+    print("\n请选择操作:")
+    print("  [1] 安装 skills")
+    print("  [2] 卸载 skills")
+
+    while True:
+        choice = input("\n请输入选择 (1-2): ").strip()
+        if choice == "1":
+            return "install"
+        elif choice == "2":
+            return "uninstall"
+        else:
+            print("❌ 无效选择，请输入 1-2")
+
+
+def show_tool_menu() -> str:
+    """显示工具选择菜单并获取用户选择"""
+    tool_keys = list(TOOL_CONFIGS.keys())
+
+    print(f"\n检测到操作系统: {detect_os()}")
+    print("\n请选择目标工具:")
+    for index, tool_key in enumerate(tool_keys, 1):
+        print(f"  [{index}] {TOOL_CONFIGS[tool_key]['name']}")
+    all_option = len(tool_keys) + 1
+    print(f"  [{all_option}] 全部")
+
+    while True:
+        choice = input(f"\n请输入选择 (1-{all_option}): ").strip()
+        if choice == str(all_option):
+            return "all"
+        try:
+            selected_index = int(choice) - 1
+        except ValueError:
+            print(f"❌ 无效选择，请输入 1-{all_option}")
+            continue
+
+        if 0 <= selected_index < len(tool_keys):
+            return tool_keys[selected_index]
+
+        print(f"❌ 无效选择，请输入 1-{all_option}")
+
+
+def show_skill_checkbox(skills: list[SkillInfo], title: str = "请选择 skills") -> list[SkillInfo]:
+    """
+    使用 questionary 显示 checkbox 多选界面
+    """
+    if check_questionary():
+        return show_skill_checkbox_questionary(skills, title)
+    else:
+        return show_skill_menu_fallback(skills, title)
+
+
+def show_skill_checkbox_questionary(skills: list[SkillInfo], title: str) -> list[SkillInfo]:
+    """使用 questionary 库的 checkbox 多选界面"""
+    import questionary
+
+    choices = []
+    for skill in skills:
+        label = f"{skill.name}"
+        if skill.description:
+            label += f" - {skill.description}"
+        choices.append(questionary.Choice(title=label, value=skill))
+
+    selected = questionary.checkbox(
+        title,
+        choices=choices,
+        instruction="(空格选择，回车确认)",
+    ).ask()
+
+    if selected is None:
+        # 用户按了 Ctrl+C
+        return []
+    return selected
+
+
+def show_skill_menu_fallback(skills: list[SkillInfo], title: str) -> list[SkillInfo]:
+    """无 questionary 时的降级选择界面"""
+    print(f"\n{title}:")
+    for i, skill in enumerate(skills, 1):
+        label = f"  [{i}] {skill.name}"
+        if skill.description:
+            label += f" - {skill.description}"
+        print(label)
+
+    print("\n输入选项说明:")
+    print("  - 多选: 输入编号，用逗号分隔 (如: 1,2,3)")
+    print("  - 全选: 输入 'all'")
+    print("  - 取消: 输入 'q' 或 'quit'")
+
+    while True:
+        choice = input("\n请输入选择: ").strip().lower()
+
+        if choice in ("q", "quit"):
+            return []
+
+        if choice == "all":
+            return skills.copy()
+
+        try:
+            indices = [int(x.strip()) for x in choice.split(",")]
+            selected = []
+            for idx in indices:
+                if 1 <= idx <= len(skills):
+                    selected.append(skills[idx - 1])
+                else:
+                    print(f"❌ 无效编号: {idx}，请输入 1-{len(skills)}")
+                    break
+            else:
+                return selected
+        except ValueError:
+            print("❌ 无效输入，请输入编号(如: 1,2,3) 或 'all'")
+
+
+def confirm_selection(skills: list[SkillInfo], action: str = "安装") -> bool:
+    """确认选择"""
+    if not skills:
+        print(f"\n未选择任何 skill。")
+        return False
+
+    print(f"\n将{action}以下 skills:")
+    for skill in skills:
+        print(f"  - {skill.name}")
+
+    print(f"\n确认{action}? (y/n): ", end="")
+    return input().strip().lower() == "y"
+
+
+def confirm_update(skill: SkillInfo, tool_key: str) -> bool:
+    """确认更新已有安装"""
+    config = TOOL_CONFIGS[tool_key]
+    home = get_home_dir()
+    target = home / config["skill_dir"] / skill.name
+    print(f"\n⚠️  检测到 {skill.name} 已安装于 {config['name']}:")
+    print(f"   {target}")
+    print("\n是否覆盖更新? (y/n): ", end="")
+    return input().strip().lower() == "y"
+
+
+def confirm_uninstall(skills: list[SkillInfo], tool_key: str) -> bool:
+    """确认卸载"""
+    if not skills:
+        return False
+
+    config = TOOL_CONFIGS[tool_key]
+    home = get_home_dir()
+
+    print(f"\n⚠️  将从 {config['name']} 卸载以下 skills:")
+    for skill in skills:
+        target = home / config["skill_dir"] / skill.name
+        print(f"  - {skill.name}")
+        print(f"    路径: {target}")
+
+    print("\n确认卸载? (y/n): ", end="")
+    return input().strip().lower() == "y"
+
+
+# ============================================================================
+# 安装逻辑
+# ============================================================================
+
+
+def get_skill_source_path(skill_name: str, tool_key: str) -> Path | None:
+    """获取 skill 的源路径"""
+    script_dir = get_script_dir()
+
+    # 优先使用平台特定目录；目录名与 tool_key 保持一致
+    skill_root = script_dir / SKILLS_DIR / skill_name
+    for platform_name in (tool_key, tool_key.replace("-", "")):
+        platform_source = skill_root / "platforms" / platform_name
+        if platform_source.exists():
+            return platform_source
+
+    # 检查 skill 根目录
+    skill_source = skill_root
+    if skill_source.exists():
+        return skill_source
+
+    return None
+
+
+def get_core_source_path() -> Path | None:
+    """获取 core 目录的源路径"""
+    script_dir = get_script_dir()
+
+    # 检查项目根目录的 core
+    core_source = script_dir / "core"
+    if core_source.exists():
+        return core_source
+
+    return None
+
+
+def fix_skill_paths(skill_content: str, target: Path) -> str:
+    """修复 SKILL.md 中的路径引用，避免工具将相对路径误解为工作区路径。"""
+    base = str(target)
+    content = skill_content
+
+    for prefix_pattern in [
+        r"(?:\.\./){2}",
+        r"\./",
+        r"(?<![\w/.-])",
+    ]:
+        content = re.sub(
+            prefix_pattern + r"(core|scripts|references|agents)/",
+            lambda match: f"{base}/{match.group(1)}/",
+            content,
+        )
+
+    return content
+
+
+def strip_frontmatter(markdown: str) -> str:
+    """去掉 Markdown 顶部的 YAML frontmatter。"""
+    if not markdown.startswith("---\n"):
+        return markdown
+
+    _, _, remainder = markdown.partition("\n---\n")
+    return remainder if remainder else markdown
+
+
+def get_command_target(skill_name: str, tool_key: str) -> Path | None:
+    """获取命令型平台的命令文件路径。"""
+    config = TOOL_CONFIGS[tool_key]
+    command_dir = config.get("command_dir")
+    if not command_dir:
+        return None
+
+    extension = config.get("command_ext", ".toml")
+    return get_home_dir() / command_dir / f"{skill_name}{extension}"
+
+
+def write_command_file(
+    skill: SkillInfo,
+    tool_key: str,
+    fixed_content: str,
+) -> None:
+    """为命令型平台生成入口文件。"""
+    command_target = get_command_target(skill.name, tool_key)
+    if not command_target:
+        return
+
+    prompt = strip_frontmatter(fixed_content).strip()
+    command_description = (
+        "Generate a business-first PRD from the current repository and ask for "
+        "missing frontend/backend evidence before generating when needed."
+    )
+    command_target.parent.mkdir(parents=True, exist_ok=True)
+    command_target.write_text(
+        "\n".join(
+            [
+                f"description = {json.dumps(command_description, ensure_ascii=False)}",
+                f"prompt = {json.dumps(prompt, ensure_ascii=False)}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
+def copy_entry(source_entry: Path, target_dir: Path, verbose: bool = True) -> None:
+    """复制文件或目录到目标目录，若已存在则覆盖。"""
+    if not source_entry.exists():
+        return
+
+    target_entry = target_dir / source_entry.name
+    if target_entry.exists():
+        if target_entry.is_dir():
+            shutil.rmtree(target_entry)
+        else:
+            target_entry.unlink()
+
+    if verbose:
+        suffix = "/" if source_entry.is_dir() else ""
+        show_progress(f"- 复制 {source_entry.name}{suffix}", 1)
+
+    if source_entry.is_dir():
+        shutil.copytree(source_entry, target_entry)
+    else:
+        shutil.copy2(source_entry, target_entry)
+
+
+def sync_skill_entries(
+    skill_root: Path,
+    skill_source: Path,
+    target: Path,
+    verbose: bool = True,
+) -> None:
+    """复制共享资源，并用平台特定资源覆盖。"""
+    excluded = {"SKILL.md", "platforms"}
+
+    for entry in skill_root.iterdir():
+        if entry.name in excluded:
+            continue
+        copy_entry(entry, target, verbose)
+
+    if skill_source == skill_root:
+        return
+
+    for entry in skill_source.iterdir():
+        if entry.name == "SKILL.md":
+            continue
+        copy_entry(entry, target, verbose)
+
+
+def install_skill(skill: SkillInfo, tool_key: str, verbose: bool = True) -> InstallResult:
+    """
+    安装单个 skill 到指定工具
+    """
+    config = TOOL_CONFIGS[tool_key]
+    home = get_home_dir()
+    target = home / config["skill_dir"] / skill.name
+
+    script_dir = get_script_dir()
+    skill_root = script_dir / SKILLS_DIR / skill.name
+    skill_source = get_skill_source_path(skill.name, tool_key)
+    try:
+        # 检查源目录
+        if not skill_source:
+            skill_source = skill_root
+
+        if not skill_source.exists():
+            return InstallResult(
+                skill=skill.name,
+                tool=tool_key,
+                success=False,
+                error=f"源目录不存在: {skill_source}",
+            )
+
+        # 平台目录只提供适配后的 SKILL.md，scripts/references 等资源默认来自 skill 根目录
+        skill_file = skill_source / "SKILL.md"
+
+        if verbose:
+            show_progress(f"安装 {skill.name} 到 {config['name']}...", 0)
+
+        # 重装前先清理目标目录，避免旧版本残留文件影响结果
+        if target.exists():
+            shutil.rmtree(target)
+        target.mkdir(parents=True, exist_ok=True)
+
+        # 复制 SKILL.md
+        if skill_file.exists():
+            if verbose:
+                show_progress("- 复制 SKILL.md", 1)
+            skill_content = skill_file.read_text(encoding="utf-8")
+            fixed_content = fix_skill_paths(skill_content, target)
+            (target / "SKILL.md").write_text(fixed_content, encoding="utf-8")
+            if tool_key == "gemini-code":
+                if verbose:
+                    show_progress("- 生成命令入口", 1)
+                write_command_file(skill, tool_key, fixed_content)
+        else:
+            return InstallResult(
+                skill=skill.name,
+                tool=tool_key,
+                success=False,
+                error="SKILL.md 不存在",
+            )
+
+        # 复制共享资源，并允许平台目录提供覆盖或额外文件（如 .cursorrules、agents/）。
+        sync_skill_entries(skill_root, skill_source, target, verbose)
+
+        return InstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=True,
+            path=target,
+        )
+
+    except PermissionError as e:
+        return InstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=False,
+            error=f"权限不足: {e}",
+        )
+    except Exception as e:
+        return InstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=False,
+            error=str(e),
+        )
+
+
+def uninstall_skill(skill: SkillInfo, tool_key: str, verbose: bool = True) -> UninstallResult:
+    """卸载单个 skill"""
+    config = TOOL_CONFIGS[tool_key]
+    home = get_home_dir()
+    target = home / config["skill_dir"] / skill.name
+
+    try:
+        if verbose:
+            show_progress(f"卸载 {skill.name} 从 {config['name']}...", 0)
+
+        if not target.exists():
+            return UninstallResult(
+                skill=skill.name,
+                tool=tool_key,
+                success=False,
+                error="目录不存在",
+            )
+
+        shutil.rmtree(target)
+
+        command_target = get_command_target(skill.name, tool_key)
+        if command_target and command_target.exists():
+            command_target.unlink()
+
+        if verbose:
+            show_progress("✓ 完成", 1)
+
+        return UninstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=True,
+            path=target,
+        )
+
+    except PermissionError as e:
+        return UninstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=False,
+            error=f"权限不足: {e}",
+        )
+    except Exception as e:
+        return UninstallResult(
+            skill=skill.name,
+            tool=tool_key,
+            success=False,
+            error=str(e),
+        )
+
+
+# ============================================================================
+# 结果显示
+# ============================================================================
+
+
+def show_install_summary(results: list[InstallResult]) -> None:
+    """显示安装结果摘要"""
+    print("\n" + "-" * 50)
+    print("  安装结果")
+    print("-" * 50)
+
+    success_count = sum(1 for r in results if r.success)
+    fail_count = len(results) - success_count
+
+    # 按工具分组显示
+    tools = sorted(set(r.tool for r in results))
+    for tool in tools:
+        config = TOOL_CONFIGS[tool]
+        tool_results = [r for r in results if r.tool == tool]
+        print(f"\n{config['name']}:")
+        for result in tool_results:
+            if result.success:
+                print(f"  ✓ {result.skill}")
+            else:
+                print(f"  ✗ {result.skill}: {result.error}")
+
+    print("\n" + "-" * 50)
+    if fail_count == 0:
+        print(f"\n🎉 全部安装完成! ({success_count}/{len(results)})")
+    else:
+        print(f"\n⚠️  部分完成: 成功 {success_count}, 失败 {fail_count}")
+
+
+def show_uninstall_summary(results: list[UninstallResult]) -> None:
+    """显示卸载结果摘要"""
+    print("\n" + "-" * 50)
+    print("  卸载结果")
+    print("-" * 50)
+
+    success_count = sum(1 for r in results if r.success)
+    fail_count = len(results) - success_count
+
+    # 按工具分组显示
+    tools = sorted(set(r.tool for r in results))
+    for tool in tools:
+        config = TOOL_CONFIGS[tool]
+        tool_results = [r for r in results if r.tool == tool]
+        print(f"\n{config['name']}:")
+        for result in tool_results:
+            if result.success:
+                print(f"  ✓ {result.skill}")
+            else:
+                print(f"  ✗ {result.skill}: {result.error}")
+
+    print("\n" + "-" * 50)
+    if fail_count == 0:
+        print(f"\n🎉 全部卸载完成! ({success_count}/{len(results)})")
+    else:
+        print(f"\n⚠️  部分完成: 成功 {success_count}, 失败 {fail_count}")
+
+
+# ============================================================================
+# 命令行参数解析
+# ============================================================================
+
+
+def parse_args() -> argparse.Namespace:
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(
+        description="Pocket Skills 安装向导",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 交互式安装
+  python install.py
+
+  # 安装指定 skills
+  python install.py --skills generate-prd-from-code
+
+  # 安装多个 skills 到指定工具
+  python install.py --skills skill1,skill2 --tools claude-code,codex
+
+  # 安装所有 skills 到所有工具
+  python install.py --skills all --tools all
+
+  # 卸载 skills
+  python install.py --uninstall --skills skill1 --tools cursor
+        """,
+    )
+
+    parser.add_argument(
+        "--skills",
+        type=str,
+        help="要操作的 skills，逗号分隔或 'all'",
+    )
+
+    parser.add_argument(
+        "--tools",
+        type=str,
+        help="目标工具，逗号分隔或 'all' (claude-code, cursor, codex, gemini-code)",
+    )
+
+    parser.add_argument(
+        "--uninstall",
+        action="store_true",
+        help="卸载模式",
+    )
+
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="跳过确认提示",
+    )
+
+    return parser.parse_args()
+
+
+def validate_skill_names(skill_names: list[str], available_skills: list[SkillInfo]) -> list[str]:
+    """验证 skill 名称有效性"""
+    available_names = {s.name for s in available_skills}
+    invalid = [name for name in skill_names if name not in available_names]
+
+    if invalid:
+        print(f"\n❌ 无效的 skill 名称: {', '.join(invalid)}")
+        print(f"可用的 skills: {', '.join(available_names)}")
+        return []
+
+    return skill_names
+
+
+def validate_tool_names(tool_names: list[str]) -> list[str]:
+    """验证工具名称有效性"""
+    valid_names = set(TOOL_CONFIGS.keys())
+    invalid = [name for name in tool_names if name not in valid_names and name != "all"]
+
+    if invalid:
+        print(f"\n❌ 无效的工具名称: {', '.join(invalid)}")
+        print(f"可用的工具: {', '.join(valid_names)}")
+        return []
+
+    return tool_names
+
+
+# ============================================================================
+# 主流程
+# ============================================================================
+
+
+def run_install_flow(
+    skills_arg: str | None = None,
+    tools_arg: str | None = None,
+    skip_confirm: bool = False,
+) -> int:
+    """执行安装流程"""
+    # 发现可用 skills
+    available_skills = discover_skills()
+
+    if not available_skills:
+        print("\n❌ 没有可用的 skills")
+        print(f"请确保 {SKILLS_DIR}/ 目录下包含有效的 skill 包")
+        return 1
+
+    # 选择 skills
+    if skills_arg:
+        if skills_arg == "all":
+            selected_skills = available_skills.copy()
+        else:
+            skill_names = [s.strip() for s in skills_arg.split(",")]
+            valid_names = validate_skill_names(skill_names, available_skills)
+            if not valid_names:
+                return 1
+            selected_skills = [s for s in available_skills if s.name in valid_names]
+    else:
+        # 交互式选择
+        if len(available_skills) == 1:
+            print(f"\n发现 1 个 skill: {available_skills[0].name}")
+            selected_skills = available_skills.copy()
+        else:
+            print(f"\n发现 {len(available_skills)} 个可用的 skills:")
+            selected_skills = show_skill_checkbox(available_skills, "请选择要安装的 skills")
+
+        if not selected_skills:
+            print("\n已取消。")
+            return 0
+
+    # 确认选择
+    if not skip_confirm and not confirm_selection(selected_skills, "安装"):
+        print("\n已取消。")
+        return 0
+
+    # 选择工具
+    if tools_arg:
+        if tools_arg == "all":
+            tools = list(TOOL_CONFIGS.keys())
+        else:
+            tool_names = [t.strip() for t in tools_arg.split(",")]
+            valid_tools = validate_tool_names(tool_names)
+            if not valid_tools:
+                return 1
+            tools = valid_tools
+    else:
+        tool_choice = show_tool_menu()
+        if tool_choice == "all":
+            tools = list(TOOL_CONFIGS.keys())
+        else:
+            tools = [tool_choice]
+
+    # 执行安装
+    print("\n正在安装...")
+    results: list[InstallResult] = []
+
+    for tool in tools:
+        for skill in selected_skills:
+            # 检查是否已安装
+            installed = detect_installed_skills(tool)
+            already_installed = [s for s in installed if s.name == skill.name]
+
+            if already_installed:
+                if not skip_confirm and not confirm_update(skill, tool):
+                    continue
+
+            result = install_skill(skill, tool)
+            results.append(result)
+
+            if result.success:
+                show_progress("✓ 完成", 1)
+            else:
+                show_progress(f"✗ 失败: {result.error}", 1)
+
+    # 显示摘要
+    show_install_summary(results)
+
+    return 0 if all(r.success for r in results) else 1
+
+
+def run_uninstall_flow(
+    skills_arg: str | None = None,
+    tools_arg: str | None = None,
+    skip_confirm: bool = False,
+) -> int:
+    """执行卸载流程"""
+    # 选择工具
+    if tools_arg:
+        if tools_arg == "all":
+            tools = list(TOOL_CONFIGS.keys())
+        else:
+            tool_names = [t.strip() for t in tools_arg.split(",")]
+            valid_tools = validate_tool_names(tool_names)
+            if not valid_tools:
+                return 1
+            tools = valid_tools
+    else:
+        tool_choice = show_tool_menu()
+        if tool_choice == "all":
+            tools = list(TOOL_CONFIGS.keys())
+        else:
+            tools = [tool_choice]
+
+    # 收集已安装的 skills
+    all_installed: list[tuple[SkillInfo, str]] = []
+    for tool in tools:
+        installed = detect_installed_skills(tool)
+        for skill in installed:
+            all_installed.append((skill, tool))
+
+    if not all_installed:
+        print("\n没有已安装的 skills")
+        return 0
+
+    # 选择要卸载的 skills
+    if skills_arg:
+        if skills_arg == "all":
+            selected = all_installed.copy()
+        else:
+            skill_names = set(s.strip() for s in skills_arg.split(","))
+            selected = [(s, t) for s, t in all_installed if s.name in skill_names]
+    else:
+        # 显示已安装列表供选择
+        print(f"\n发现 {len(all_installed)} 个已安装的 skills:")
+        skills_by_name: dict[str, list[tuple[SkillInfo, str]]] = {}
+        for skill, tool in all_installed:
+            if skill.name not in skills_by_name:
+                skills_by_name[skill.name] = []
+            skills_by_name[skill.name].append((skill, tool))
+
+        skill_infos = [
+            SkillInfo(name=name, path=Path(), description=f"已安装到: {', '.join(t for _, t in pairs)}")
+            for name, pairs in skills_by_name.items()
+        ]
+
+        selected_skills = show_skill_checkbox(skill_infos, "请选择要卸载的 skills")
+
+        if not selected_skills:
+            print("\n已取消。")
+            return 0
+
+        selected = [
+            (s, t)
+            for s, t in all_installed
+            if s.name in [sel.name for sel in selected_skills]
+        ]
+
+    # 确认卸载
+    if not skip_confirm:
+        print("\n将要卸载:")
+        for skill, tool in selected:
+            config = TOOL_CONFIGS[tool]
+            print(f"  - {skill.name} (从 {config['name']})")
+
+        print("\n确认卸载? (y/n): ", end="")
+        if input().strip().lower() != "y":
+            print("\n已取消。")
+            return 0
+
+    # 执行卸载
+    print("\n正在卸载...")
+    results: list[UninstallResult] = []
+
+    for skill, tool in selected:
+        result = uninstall_skill(skill, tool)
+        results.append(result)
+
+    # 显示摘要
+    show_uninstall_summary(results)
+
+    return 0 if all(r.success for r in results) else 1
+
+
+def main() -> int:
+    """主函数"""
+    # 检查 Python 版本
+    if not check_python_version():
+        return 1
+
+    # 解析命令行参数
+    args = parse_args()
+
+    # 显示欢迎信息
+    show_banner()
+
+    # 检查 questionary
+    if not check_questionary():
+        print("\n💡 提示: 安装 questionary 可获得更好的交互体验")
+        print("   pip install questionary")
+        print("   当前使用简单输入模式\n")
+
+    # 确定运行模式
+    if args.skills or args.tools:
+        # 非交互模式
+        if args.uninstall:
+            return run_uninstall_flow(args.skills, args.tools, args.yes)
+        else:
+            return run_install_flow(args.skills, args.tools, args.yes)
+    elif args.uninstall:
+        # 交互式卸载
+        return run_uninstall_flow(None, None, args.yes)
+    else:
+        # 交互式主菜单
+        action = show_main_menu()
+        if action == "install":
+            return run_install_flow(None, None, args.yes)
+        else:
+            return run_uninstall_flow(None, None, args.yes)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

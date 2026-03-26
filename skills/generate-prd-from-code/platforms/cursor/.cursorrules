@@ -1,0 +1,191 @@
+# Generate PRD from Code
+
+Turn an existing repository into an AI-friendly, product-first initialization pack.
+
+Before generating anything, identify whether the currently opened project is backend-only, frontend-only, full-stack, or unclear. If a paired frontend repo, paired backend repo, or running frontend URL is likely needed but missing, stop and ask the user whether to supplement those inputs or explicitly continue with "先基于当前仓库生成".
+
+## Output
+
+When this skill runs, it generates:
+
+- one AI context overview
+- one main PRD
+- one appendix per inferred module
+- one complete coverage check across visible pages or inferred modules
+
+## Quick Start
+
+### Code-Only Mode
+
+When the user does not provide a frontend URL:
+
+```bash
+python3 ../../core/scripts/detect_stack.py --repo /path/to/repo --pretty
+python3 ../../core/scripts/extract_repo_facts.py --repo /path/to/repo --output /tmp/repo-facts.json
+python3 ../../core/scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-dir /path/to/repo/docs/prd --language zh
+```
+
+### Frontend-Enhanced Mode
+
+When the user provides a running frontend URL:
+
+1. Run the same code-only extraction commands.
+2. Use browser tools to open the provided URL.
+3. Capture all visible leaf menu items first, not just a hand-picked subset.
+4. For every visible leaf menu item:
+   - record its title
+   - record its breadcrumb path
+   - if it can be opened, capture its route
+   - if it cannot be opened or deeply captured yet, still keep it as a menu-level page stub
+5. Continue until every visible leaf page reaches at least page-level capture, unless blocked by permissions or broken navigation.
+6. For every opened page, capture:
+   - filter fields
+   - table columns
+   - key buttons and bulk actions
+   - row actions
+   - dialogs and form fields
+   - visible status terms
+   - empty-state or helper text
+   - exception-related wording and status branches
+   - the page's runtime requests (list, detail, submit, approve, reject, assign, status-update, history, export, import)
+7. For every captured request, trace the corresponding backend route and inspect supporting logic:
+   - controller or router method
+   - direct service, facade, manager, validator, or processor call hints
+   - state-machine, scheduler, listener, queue, or integration hints
+8. Save the frontend evidence to a JSON file matching the evidence rules.
+9. Merge the frontend evidence:
+
+```bash
+python3 ../../core/scripts/merge_evidence.py \
+  --facts /tmp/repo-facts.json \
+  --frontend-evidence /tmp/frontend-evidence.json \
+  --output-dir /path/to/repo/docs/prd \
+  --language zh
+```
+
+## Workflow
+
+### 0. Run the preflight gate
+
+Inspect the currently opened repository before running generation commands.
+
+Check:
+- whether this looks like backend-only, frontend-only, full-stack, or unclear
+- whether a complete PRD would require another repository or a running frontend URL
+- whether the user has already given permission to continue with partial evidence
+
+If evidence is incomplete, stop and ask the user before creating any `docs/prd/` output.
+
+### 1. Detect the stack
+
+Run `../../core/scripts/detect_stack.py` first to understand which analysis path to trust most.
+Read `../../core/references/stack-detection-guide.md` when the repository uses multiple stacks or weak signals.
+
+### 2. Extract repository facts
+
+Run `../../core/scripts/extract_repo_facts.py` against the repository root.
+
+The extractor captures:
+- repository modules and package structure
+- controllers, routers, and route definitions
+- service, domain, entity, enum, scheduler, listener, and queue artifacts
+- README and `docs/` evidence
+- security, permission, auth, integration, and scheduling signals
+- frontend source route hints when frontend code exists in the same repository
+
+Treat the extractor output as the supporting baseline for the PRD. Do not let it drag the final document into controller or interface inventory mode.
+
+### 3. Decide whether frontend evidence is needed
+
+Skip browser work when the user does not provide a frontend URL, but do not assume that means generation should continue immediately.
+Do not guess or invent a running frontend address.
+
+If the repository appears backend-only or otherwise incomplete for a page-first PRD, ask the user whether to provide the missing frontend evidence or continue with a limited current-repo-only PRD.
+
+Use browser tools only when the user explicitly provides a URL and the live UI would clarify:
+- page names and navigation hierarchy
+- complete leaf-menu coverage
+- page structure and visible fields
+- page actions and bulk actions
+- page dialogs and form inputs
+- visible status names
+- route-to-page mapping
+- request-to-page mapping
+- request-to-backend-route mapping
+- role-specific entry points
+- wording that is visible only in the UI
+
+When frontend evidence exists, let the UI drive the structure of the PRD. Code is there to explain the invisible rules and backend responsibilities behind the page.
+
+### 4. Merge evidence into PRD outputs
+
+Run `../../core/scripts/merge_evidence.py` to generate:
+- one AI context overview
+- one main PRD
+- one appendix per inferred module
+- one initialization coverage check
+
+Default output directory is `docs/prd/` under the target repository.
+Default language is Chinese.
+
+### 5. Keep inference explicit
+
+Follow `../../core/references/evidence-rules.md` strictly:
+- when frontend evidence exists, prefer page facts for product surface area
+- initialization is not complete until every visible leaf page is either deeply captured or explicitly marked as blocked
+- for every important page, connect visible actions to runtime requests and backend route logic
+- use code and docs to fill invisible rules, statuses, and constraints
+- do not let code structure replace page-first product language
+- put every unsupported guess into `假设与待确认`
+
+If no frontend URL is provided, explicitly state that page interaction conclusions come from source code and naming signals instead of a live UI session.
+If the user chose to continue without missing frontend/backend evidence, explicitly state that the document is a limited current-repo-only PRD.
+
+## Output Contract
+
+### Main PRD Structure
+
+- 文档说明
+- 产品定位
+- 目标角色
+- 顶层导航与信息架构
+- 初始化覆盖检查
+- 模块总览
+- 核心业务对象
+- 核心业务流程
+- 关键状态与业务规则
+- 关键状态机图
+- 前后端闭环说明
+- 页面规格索引
+- 假设与待确认
+
+### Module Appendix Structure
+
+- 模块概览
+- 覆盖页面
+- 页面规格 (每个关键页面包含: 页面目标、筛选字段、列表字段、核心操作、弹窗字段、可见状态、流程图、前后端闭环说明)
+- 模块业务规则
+- 后端支撑索引
+- 状态与流转
+- 异常处理场景
+- 与其他模块关系
+- 待确认项
+
+## References
+
+- `../../core/references/prd-template.md` - Output structure reference
+- `../../core/references/evidence-rules.md` - Evidence mixing rules
+- `../../core/references/stack-detection-guide.md` - Stack detection guidance
+
+## Notes
+
+- Prefer frontend-enhanced mode whenever the user provides a valid frontend URL.
+- This skill prefers complete module coverage over small hand-picked samples.
+- Keep documentation optimized for AI agents, but written in product language.
+- Keep the PRD structured, page-first, and evidence-backed.
+- Avoid interface-by-interface dumps.
+- Render state flows as Mermaid `stateDiagram-v2` when states are explicit.
+- Avoid vague field descriptions. Mark uncertain meanings as pending confirmation.
+- Prefer frontend source labels, i18n translations, and modal form definitions over raw English identifiers.
+- Do not use generic business-purpose placeholders.
+- If a real page request cannot be matched to a stable backend route, describe the closure from the request itself.
