@@ -2,54 +2,36 @@
 
 [English](../README.md) | 中文
 
-一套精心策划的 AI 友好技能集合，用于代码分析、文档生成等场景。每个技能都是自包含的，并提供了 Claude Code、Cursor、Codex、Gemini CLI 等 AI 编码助手的平台适配器。
+一套精心策划的 AI 友好技能集合，用于代码分析、文档生成等场景。每个技能都是自包含的，并提供了 Claude Code、Cursor、Codex、Gemini CLI 等平台的适配器。
 
 ## 为什么选择 Pocket Skills？
 
-- **自包含**：每个技能都包含自己的脚本、参考文档和平台适配器
-- **多平台**：支持 Claude Code、Cursor、Codex 和 Gemini CLI
-- **易于安装**：交互式安装器，支持复选框选择
-- **可验证输出**：技能产生结构化、可验证的输出结果
+- **自包含** — 每个技能自带脚本、参考文档和平台适配器
+- **多平台** — 支持 Claude Code、Cursor、Codex 和 Gemini CLI
+- **一键安装** — 交互式安装器，复选框选择
+- **可验证输出** — 技能产生结构化、可验证的输出结果
 
 ## 可用技能
 
-| 技能 | 描述 |
-|------|------|
-| [generate-prd-from-code](../skills/generate-prd-from-code/SKILL.md) | 从代码库逆向工程，生成业务导向的 PRD（产品需求文档） |
+### [generate-prd-from-code](../skills/generate-prd-from-code/SKILL.md)
 
-## 仓库结构
+从代码库逆向工程，生成业务导向的 PRD（产品需求文档）。支持两种模式：
 
-```text
-pocket-skills/
-├── skills/                    # 所有技能集合
-│   └── generate-prd-from-code/
-│       ├── SKILL.md           # 主入口（通用版本）
-│       ├── references/        # 模板和规则
-│       ├── scripts/           # Python 提取脚本
-│       └── platforms/         # 平台适配器
-│           ├── claude-code/
-│           ├── cursor/
-│           ├── codex/
-│           └── gemini-code/
-├── install.py                 # 交互式安装器
-├── install.sh                 # macOS/Linux 启动脚本
-├── install.bat                # Windows 启动脚本
-└── docs/                      # 文档
-```
+- **纯代码模式** — 分析仓库结构、路由、服务和实体，推断产品范围
+- **前端增强模式** — 爬取线上 UI 捕获页面、字段和流程，再追溯到后端逻辑，形成完整的前后端闭环
 
-## 安装
+输出：AI 上下文概览 + 主 PRD + 各模块附录 + 覆盖检查清单。
 
-### 系统要求
+### [project-md-reconstructor](../skills/project-md-reconstructor/SKILL.md)
 
-- Python 3.8+
-- 可选：[questionary](https://github.com/tmbo/questionary) 用于增强交互体验
+复现 OpenSpec 的 `project.md` 工作流 — 扫描现有仓库，生成一个复用感知的 `docs/project.md`，涵盖技术栈、编码规范、架构模式、约束条件和可复用构建块。
 
-### 交互式安装
+## 快速开始
 
-运行安装器：
+### 1. 安装
 
 ```bash
-# macOS/Linux
+# macOS / Linux
 ./install.sh
 
 # Windows
@@ -59,22 +41,55 @@ install.bat
 python3 install.py
 ```
 
-安装器将：
-1. 显示主菜单，选择 **安装** 或 **卸载**
-2. 通过复选框界面展示可用技能
-3. 让您选择目标工具（Claude Code、Cursor、Codex、Gemini CLI 或全部）
-4. 确认后执行安装
-
-### 命令行选项
-
-用于非交互式或脚本化使用：
+### 2. 在 Claude Code 中使用
 
 ```bash
-# 安装特定技能
-python3 install.py --skills generate-prd-from-code --tools claude-code
+# 从当前项目生成 PRD
+/pocket-generate-prd-from-code
 
-# 安装多个技能
-python3 install.py --skills skill1,skill2 --tools claude-code,cursor,codex
+# 从当前项目生成 docs/project.md
+/pocket-project-md-reconstructor
+```
+
+### 3. 在 Cursor 中使用
+
+将技能平台适配器中的 `.cursorrules` 复制到项目根目录：
+
+```bash
+cp skills/generate-prd-from-code/platforms/cursor/.cursorrules /path/to/your/project/
+```
+
+### 4. 在 Codex / Gemini CLI 中使用
+
+安装后，技能位于：
+- Codex：`~/.codex/skills/pocket-<skill-name>/`
+- Gemini CLI：`~/.gemini/commands/pocket-<skill-name>.toml`
+
+## 安装
+
+### 系统要求
+
+- Python 3.8+
+- [questionary](https://github.com/tmbo/questionary) 用于交互模式
+
+### 交互式安装
+
+安装器引导你完成：
+
+1. 选择 **安装** 或 **卸载**
+2. 复选框选择技能（空格切换，回车确认）
+3. 复选框选择目标工具
+4. 确认并执行
+
+```bash
+pip install questionary   # 交互模式依赖
+```
+
+### 命令行模式
+
+```bash
+# 安装指定技能到指定工具
+python3 install.py --skills generate-prd-from-code --tools claude-code
 
 # 安装所有技能到所有工具
 python3 install.py --skills all --tools all
@@ -82,100 +97,67 @@ python3 install.py --skills all --tools all
 # 跳过确认提示
 python3 install.py --skills generate-prd-from-code --tools all --yes
 
-# 卸载技能
-python3 install.py --uninstall --skills generate-prd-from-code --tools claude-code
-
-# 从所有工具卸载所有技能
+# 卸载
 python3 install.py --uninstall --skills all --tools all --yes
 
-# 显示帮助
+# 查看帮助
 python3 install.py --help
 ```
 
-### 参数说明
-
 | 参数 | 描述 |
 |------|------|
-| `--skills` | 逗号分隔的技能列表，或 `all` 表示全部 |
-| `--tools` | 目标工具：`claude-code`、`cursor`、`codex`、`gemini-code` 或 `all` |
+| `--skills` | 逗号分隔的技能名称，或 `all` |
+| `--tools` | `claude-code`、`cursor`、`codex`、`gemini-code` 或 `all` |
 | `--uninstall` | 切换到卸载模式 |
 | `--yes`, `-y` | 跳过确认提示 |
 
-### 增强交互模式
+## 手动使用
 
-如需最佳交互体验（空格切换、方向键导航的复选框选择），请安装 questionary：
-
-```bash
-pip install questionary
-```
-
-未安装 questionary 时，安装器会回退到简单的数字选择模式。
-
-## 卸载
-
-移除已安装的技能：
+也可以不通过安装器，直接运行脚本：
 
 ```bash
-# 交互式卸载
-python3 install.py --uninstall
-
-# 非交互式卸载
-python3 install.py --uninstall --skills generate-prd-from-code --tools claude-code --yes
-```
-
-## 快速开始
-
-### 在 Claude Code 中使用
-
-安装后，在您的项目中使用该技能：
-
-```
-/generate-prd-from-code
-```
-
-### 手动使用
-
-```bash
-# 进入技能目录
 cd skills/generate-prd-from-code
 
-# 直接运行脚本
+# 检测技术栈
 python3 scripts/detect_stack.py --repo /path/to/your/repo --pretty
+
+# 提取仓库信息
 python3 scripts/extract_repo_facts.py --repo /path/to/your/repo --output /tmp/repo-facts.json
+
+# 合并证据生成 PRD
 python3 scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-dir /path/to/your/repo/docs/prd --language zh
 ```
 
-### 在 Cursor 中使用
+## 仓库结构
 
-```bash
-cd skills/generate-prd-from-code/platforms/cursor
-# 将 .cursorrules 复制到您的项目根目录
+```text
+pocket-skills/
+├── skills/                          # 技能集合
+│   ├── generate-prd-from-code/
+│   │   ├── SKILL.md                 # 技能定义
+│   │   ├── references/              # 模板与规则
+│   │   ├── scripts/                 # Python 脚本
+│   │   └── platforms/               # 平台适配器
+│   │       ├── claude-code/
+│   │       ├── cursor/
+│   │       ├── codex/
+│   │       └── gemini-code/
+│   └── project-md-reconstructor/
+│       ├── SKILL.md
+│       ├── references/
+│       ├── scripts/
+│       └── platforms/
+├── install.py                       # 安装器
+├── install.sh / install.bat         # 启动脚本
+└── docs/                            # 文档
 ```
-
-### 在 Codex 中使用
-
-安装后，技能位于 `~/.codex/skills/generate-prd-from-code/`。
-
-### 在 Gemini CLI 中使用
-
-安装器会创建：
-
-- 全局命令：`~/.gemini/commands/generate-prd-from-code.toml`
-- 支持文件：`~/.gemini/pocket-skills/generate-prd-from-code/`
-
-当您需要仓库范围的工作流时，Gemini CLI 也支持在 `.gemini/commands/` 中创建项目级自定义命令。
 
 ## 添加新技能
 
-添加新技能的步骤：
-
-1. 在 `skills/` 下创建以技能名称命名的目录（使用 kebab-case 命名法）
-2. 添加包含 frontmatter 和说明的 `SKILL.md` 文件
-3. 添加 `scripts/` 目录存放自动化脚本
-4. 添加 `references/` 目录存放模板和规则
-5. 添加 `platforms/` 目录存放平台特定适配器
-
-安装器会自动发现 `skills/` 目录下的任何新技能。
+1. 在 `skills/` 下创建目录（使用 kebab-case 命名）
+2. 添加带 YAML frontmatter 的 `SKILL.md`
+3. 按需添加 `scripts/`、`references/`、`platforms/`
+4. 安装器会自动发现新技能
 
 ## 贡献
 

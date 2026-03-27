@@ -1,6 +1,6 @@
 # Contributing to Pocket Skills
 
-Thank you for your interest in contributing to Pocket Skills!
+Thank you for your interest in contributing!
 
 ## How to Contribute
 
@@ -17,13 +17,13 @@ Thank you for your interest in contributing to Pocket Skills!
        ├── claude-code/
        │   └── SKILL.md
        ├── cursor/
-       │   └── SKILL.md
+       │   ├── SKILL.md
+       │   └── .cursorrules
        ├── codex/
        │   └── SKILL.md
        └── gemini-code/
            └── SKILL.md
    ```
-
 3. **Write the SKILL.md** with proper frontmatter:
    ```yaml
    ---
@@ -36,14 +36,14 @@ Thank you for your interest in contributing to Pocket Skills!
    ## Overview
    ...
    ```
+4. **Test** with each supported platform
+5. **Submit a pull request**
 
-4. **Test thoroughly** with each supported platform
-5. **Update README.md** to list your skill
-6. **Submit a pull request**
+The installer auto-discovers new skills — no other config files need updating.
 
 ### Improving Existing Skills
 
-1. Open an issue to discuss your proposed changes
+1. Open an issue to discuss proposed changes
 2. Fork and make your improvements
 3. Ensure backwards compatibility
 4. Submit a pull request
@@ -53,25 +53,20 @@ Thank you for your interest in contributing to Pocket Skills!
 ### SKILL.md Requirements
 
 - Must have YAML frontmatter with `name` and `description`
-- Should be clear enough for an AI agent to follow
-- Should include:
-  - Overview
-  - Quick Start
-  - Workflow/Steps
-  - Output Contract
-  - References (if applicable)
+- Should be clear enough for an AI agent to follow autonomously
+- Recommended sections: Overview, Quick Start, Workflow, Output Contract, References
 
 ### Code Standards
 
-- Python scripts should be compatible with Python 3.8+
-- Use clear variable names and add comments
-- Include usage examples in the script or SKILL.md
+- Python scripts: compatible with Python 3.8+
+- Clear variable names with comments
+- Include usage examples in SKILL.md or script docstrings
 
 ### Platform Adapters
 
-- Each adapter should reference the main skill's resources using relative paths
-- Use `../../scripts/` and `../../references/` from within platform directories
+- Reference main skill resources via relative paths (`../../scripts/`, `../../references/`)
 - Document any platform-specific requirements
+- Installed commands are prefixed with `pocket-`
 
 ## Code of Conduct
 

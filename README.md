@@ -2,55 +2,36 @@
 
 [English](README.md) | [中文](docs/README_CN.md)
 
-A curated collection of AI-friendly skills for code analysis, documentation generation, and more. Each skill is self-contained with platform adapters for Claude Code, Cursor, Codex, Gemini CLI, and other AI coding assistants.
+A curated collection of AI-friendly skills for code analysis, documentation generation, and more. Each skill is self-contained with platform adapters for Claude Code, Cursor, Codex, and Gemini CLI.
 
 ## Why Pocket Skills?
 
-- **Self-contained**: Each skill includes its own scripts, references, and platform adapters
-- **Multi-platform**: Works with Claude Code, Cursor, Codex, and Gemini CLI
-- **Easy installation**: Interactive installer with checkbox selection
-- **Evidence-backed**: Skills produce structured, verifiable outputs
+- **Self-contained** — Each skill bundles its own scripts, references, and platform adapters
+- **Multi-platform** — Works with Claude Code, Cursor, Codex, and Gemini CLI
+- **One-command install** — Interactive installer with checkbox selection
+- **Evidence-backed** — Skills produce structured, verifiable outputs
 
 ## Available Skills
 
-| Skill | Description |
-|-------|-------------|
-| [generate-prd-from-code](skills/generate-prd-from-code/SKILL.md) | Reverse-engineer a codebase into a business-first PRD |
-| [project-md-reconstructor](skills/project-md-reconstructor/SKILL.md) | Recreate the old OpenSpec project.md workflow and generate a reuse-aware docs/project.md from an existing repository |
+### [generate-prd-from-code](skills/generate-prd-from-code/SKILL.md)
 
-## Repository Layout
+Reverse-engineer a codebase into a business-first PRD (Product Requirement Document). Supports two modes:
 
-```text
-pocket-skills/
-├── skills/                    # All skills collection
-│   └── generate-prd-from-code/
-│       ├── SKILL.md           # Main entry (universal version)
-│       ├── references/        # Templates and rules
-│       ├── scripts/           # Python extraction scripts
-│       └── platforms/         # Platform adapters
-│           ├── claude-code/
-│           ├── cursor/
-│           ├── codex/
-│           └── gemini-code/
-├── install.py                 # Interactive installer
-├── install.sh                 # macOS/Linux launcher
-├── install.bat                # Windows launcher
-└── docs/                      # Documentation
-```
+- **Code-only** — Analyze repository structure, routes, services, and entities to infer product scope
+- **Frontend-enhanced** — Crawl a live UI to capture pages, fields, and flows, then trace them back to backend logic for a complete frontend-backend closed loop
 
-## Installation
+Output: AI context overview + main PRD + per-module appendices + coverage checklist.
 
-### Requirements
+### [project-md-reconstructor](skills/project-md-reconstructor/SKILL.md)
 
-- Python 3.8+
-- Optional: [questionary](https://github.com/tmbo/questionary) for enhanced interactive experience
+Recreate the OpenSpec `project.md` workflow — scan an existing repository and generate a reuse-aware `docs/project.md` covering tech stack, conventions, architecture patterns, constraints, and reusable building blocks.
 
-### Interactive Installation
+## Quick Start
 
-Run the installer:
+### 1. Install
 
 ```bash
-# macOS/Linux
+# macOS / Linux
 ./install.sh
 
 # Windows
@@ -60,127 +41,127 @@ install.bat
 python3 install.py
 ```
 
-The installer will:
-1. Show a main menu to choose **Install** or **Uninstall**
-2. Display available skills with a checkbox interface
-3. Let you select target tools (Claude Code, Cursor, Codex, Gemini CLI, or all)
-4. Confirm and execute the installation
-
-### Command Line Options
-
-For non-interactive or scripted use:
+### 2. Use in Claude Code
 
 ```bash
-# Install specific skills
-python3 install.py --skills generate-prd-from-code --tools claude-code
+# Generate a PRD from the current project
+/pocket-generate-prd-from-code
 
-# Install multiple skills
-python3 install.py --skills skill1,skill2 --tools claude-code,cursor,codex
+# Generate docs/project.md from the current project
+/pocket-project-md-reconstructor
+```
+
+### 3. Use in Cursor
+
+Copy the `.cursorrules` from the skill's platform adapter to your project root:
+
+```bash
+cp skills/generate-prd-from-code/platforms/cursor/.cursorrules /path/to/your/project/
+```
+
+### 4. Use in Codex / Gemini CLI
+
+After installation, skills are available under:
+- Codex: `~/.codex/skills/pocket-<skill-name>/`
+- Gemini CLI: `~/.gemini/commands/pocket-<skill-name>.toml`
+
+## Installation
+
+### Requirements
+
+- Python 3.8+
+- [questionary](https://github.com/tmbo/questionary) for interactive mode
+
+### Interactive Mode
+
+The installer walks you through:
+
+1. Choose **Install** or **Uninstall**
+2. Select skills via checkbox (Space to toggle, Enter to confirm)
+3. Select target tools
+4. Confirm and execute
+
+```bash
+pip install questionary   # Required for interactive mode
+```
+
+### Command Line Mode
+
+```bash
+# Install specific skills to specific tools
+python3 install.py --skills generate-prd-from-code --tools claude-code
 
 # Install all skills to all tools
 python3 install.py --skills all --tools all
 
-# Skip confirmation prompts
+# Skip confirmation
 python3 install.py --skills generate-prd-from-code --tools all --yes
 
-# Uninstall skills
-python3 install.py --uninstall --skills generate-prd-from-code --tools claude-code
-
-# Uninstall all skills from all tools
+# Uninstall
 python3 install.py --uninstall --skills all --tools all --yes
 
-# Show help
+# Help
 python3 install.py --help
 ```
 
-### Parameters
-
 | Parameter | Description |
 |-----------|-------------|
-| `--skills` | Comma-separated list of skills to install/uninstall, or `all` |
-| `--tools` | Target tools: `claude-code`, `cursor`, `codex`, `gemini-code`, or `all` |
+| `--skills` | Comma-separated skill names, or `all` |
+| `--tools` | `claude-code`, `cursor`, `codex`, `gemini-code`, or `all` |
 | `--uninstall` | Switch to uninstall mode |
 | `--yes`, `-y` | Skip confirmation prompts |
 
-### Enhanced Interactive Mode
+## Manual Usage
 
-For the best interactive experience with checkbox selection (Space to toggle, Arrow keys to navigate), install questionary:
-
-```bash
-pip install questionary
-```
-
-Without questionary, the installer falls back to a simple number-based selection.
-
-## Uninstallation
-
-To remove installed skills:
+Scripts can be run directly without the installer:
 
 ```bash
-# Interactive uninstall
-python3 install.py --uninstall
-
-# Non-interactive uninstall
-python3 install.py --uninstall --skills generate-prd-from-code --tools claude-code --yes
-```
-
-## Quick Start
-
-### Using with Claude Code
-
-After installation, use the skill in your project:
-
-```
-/generate-prd-from-code
-```
-
-### Manual Usage
-
-```bash
-# Navigate to the skill directory
 cd skills/generate-prd-from-code
 
-# Run the scripts directly
+# Detect tech stack
 python3 scripts/detect_stack.py --repo /path/to/your/repo --pretty
+
+# Extract repository facts
 python3 scripts/extract_repo_facts.py --repo /path/to/your/repo --output /tmp/repo-facts.json
+
+# Merge evidence into PRD
 python3 scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-dir /path/to/your/repo/docs/prd --language zh
 ```
 
-### Using with Cursor
+## Repository Layout
 
-```bash
-cd skills/generate-prd-from-code/platforms/cursor
-# Copy .cursorrules to your project root
+```text
+pocket-skills/
+├── skills/                          # Skill collection
+│   ├── generate-prd-from-code/
+│   │   ├── SKILL.md                 # Skill definition
+│   │   ├── references/              # Templates & rules
+│   │   ├── scripts/                 # Python scripts
+│   │   └── platforms/               # Platform adapters
+│   │       ├── claude-code/
+│   │       ├── cursor/
+│   │       ├── codex/
+│   │       └── gemini-code/
+│   └── project-md-reconstructor/
+│       ├── SKILL.md
+│       ├── references/
+│       ├── scripts/
+│       └── platforms/
+├── install.py                       # Installer
+├── install.sh / install.bat         # Launchers
+└── docs/                            # Documentation
 ```
-
-### Using with Codex
-
-After installation, the skill is available under `~/.codex/skills/generate-prd-from-code/`.
-
-### Using with Gemini CLI
-
-The installer creates:
-
-- a global command at `~/.gemini/commands/generate-prd-from-code.toml`
-- support files under `~/.gemini/pocket-skills/generate-prd-from-code/`
-
-Gemini CLI also supports project-level custom commands in `.gemini/commands/` when you want repository-scoped workflows.
 
 ## Adding New Skills
 
-To add a new skill:
-
-1. Create a directory under `skills/` with your skill name (use kebab-case)
-2. Add a `SKILL.md` file with frontmatter and instructions
-3. Add `scripts/` for automation scripts
-4. Add `references/` for templates and rules
-5. Add `platforms/` for platform-specific adapters
-
-The installer will automatically discover any new skills added to the `skills/` directory.
+1. Create a directory under `skills/` (kebab-case naming)
+2. Add `SKILL.md` with YAML frontmatter
+3. Add `scripts/`, `references/`, `platforms/` as needed
+4. The installer auto-discovers new skills
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
