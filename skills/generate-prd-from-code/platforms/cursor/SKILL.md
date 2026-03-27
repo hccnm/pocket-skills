@@ -84,7 +84,7 @@ python3 ../../scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-di
 Use frontend-enhanced mode when the user provides a running frontend URL:
 
 1. Run the same code-only extraction commands.
-2. Use browser tools to open the provided URL.
+2. Prefer opening the provided URL with Chrome MCP. If Chrome MCP is unavailable in the current Cursor session, fall back to another available webpage-reading or browser MCP.
 3. Capture all visible leaf menu items first, not just a hand-picked subset.
 4. For every visible leaf menu item:
    - record its title
@@ -157,7 +157,7 @@ Do not guess or invent a running frontend address.
 
 If the repository appears backend-only or otherwise incomplete for a page-first PRD, ask the user whether to provide the missing frontend evidence or continue with a limited current-repo-only PRD.
 
-Use browser tools only when the user explicitly provides a URL and the live UI would clarify:
+Prefer Chrome MCP when the user explicitly provides a URL and the live UI would clarify:
 
 - page names and navigation hierarchy
 - complete leaf-menu coverage
@@ -170,6 +170,8 @@ Use browser tools only when the user explicitly provides a URL and the live UI w
 - request-to-backend-route mapping
 - role-specific entry points
 - wording that is visible only in the UI
+
+If Chrome MCP is unavailable in the current Cursor session, you may fall back to another available webpage-reading or browser MCP, but say explicitly that Chrome MCP was unavailable and that fallback evidence may be shallower than a full interactive browser capture.
 
 When frontend evidence exists, let the UI drive the structure of the PRD. Code is there to explain the invisible rules and backend responsibilities behind the page, not to dominate the output.
 
