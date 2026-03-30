@@ -18,15 +18,15 @@ Generate one lightweight overview file for agent onboarding:
 ## Main PRD
 
 1. `文档说明`
-   - Explain whether the PRD was built from live UI, code-only inference, or both.
+   - Explain whether the PRD was built from live UI, source-only inference, or both.
 2. `产品定位`
    - Summarize the system in business language.
 3. `目标角色`
    - Prefer visible UI roles and product responsibilities.
 4. `顶层导航与信息架构`
-   - Prefer live frontend menus, breadcrumbs, and page names.
+   - Prefer live frontend menus, breadcrumbs, page names, or source-backed page groupings when no live UI exists.
 5. `初始化覆盖检查`
-   - Explain how many visible leaf pages were found, how many were deeply captured, and which ones remain menu-only.
+   - Explain how many relevant modules or pages were found, how many were deeply captured, how many remain placeholders, and which ones are blocked by missing evidence.
 6. `模块总览`
    - Summarize each business module in one or two product sentences.
 7. `核心业务对象`
@@ -38,7 +38,7 @@ Generate one lightweight overview file for agent onboarding:
 10. `关键状态机图`
    - Convert important status transitions into Mermaid `stateDiagram-v2` when possible.
 11. `前后端闭环说明`
-   - Summarize how visible pages, runtime requests, and backend logic connect into complete product behavior.
+   - Summarize how visible pages, runtime requests, source logic, and backend behavior connect into complete product behavior.
 12. `页面规格索引`
    - Tell the agent which page specs exist and where to look first.
 13. `假设与待确认`
@@ -79,9 +79,11 @@ Generate one lightweight overview file for agent onboarding:
 - If a frontend URL is provided, prefer full visible-menu coverage over a hand-picked subset of pages.
 - Use runtime requests and matched backend routes to explain product闭环, but keep the wording product-first rather than technical.
 - If no frontend URL is provided, explicitly say the UI layer was inferred from source code and route naming.
+- In multi-project workspaces, explicitly state which project or project combination defines the PRD scope.
 - Do not turn the final document into an API list or controller inventory.
 - Avoid generic field descriptions such as “用于支持展示或处理判断”.
 - Avoid generic action purposes such as “用于推动当前页面中的业务处理动作”.
 - Prefer readable Chinese labels from frontend source and i18n. Only show raw English identifiers when absolutely necessary, and mark inferred rewrites clearly.
 - If a flow cannot be confidently reconstructed, write `待补充` instead of generating a meaningless generic Mermaid flow.
 - If a field meaning is uncertain, say it is pending confirmation instead of fabricating a vague explanation.
+- If a module or page was discovered but still lacks enough evidence, keep it visible in the coverage check or appendix and mark the gap explicitly.

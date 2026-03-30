@@ -1,6 +1,6 @@
 # Stack Detection Guide
 
-Use `scripts/detect_stack.py` before the deeper extraction step.
+Use this guide during repository exploration to understand which parts of the workspace deserve the most trust and attention.
 
 ## High-confidence signals
 
@@ -22,20 +22,28 @@ Use `scripts/detect_stack.py` before the deeper extraction step.
   - `src/router`, `src/routes`, `src/pages`, `app`, `pages`
   - React, Vue, Next, Angular, Svelte dependencies
 
-## Fallback behavior
+## Exploration Heuristics
 
-When no framework is strongly detected:
+When the workspace contains multiple apps or services:
+
+- list top-level candidates first
+- inspect manifests, route files, page directories, and docs before deciding scope
+- determine which candidates belong to the requested product surface
+- do not assume every project in the workspace belongs to the same PRD
+
+When the workspace is weakly structured:
 
 - rely on directory naming
 - rely on file naming
 - rely on route-like strings in source files
+- rely on docs and README descriptions
 - keep confidence lower in the generated assumptions
 
-## Mixed repositories
+## Mixed Repositories and Multi-Project Workspaces
 
-When the repository includes multiple stacks:
+When the workspace includes multiple stacks:
 
 - detect all plausible stacks
-- extract backend facts and frontend source facts separately
-- keep the PRD unified
-- note in assumptions that the product spans multiple technical layers
+- separate frontend evidence and backend evidence conceptually even if they live in different projects
+- keep the PRD unified only when the evidence supports a single product surface
+- note in assumptions when the product spans multiple technical layers or repositories

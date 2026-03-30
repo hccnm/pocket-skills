@@ -1,4 +1,4 @@
 interface:
   display_name: "Generate PRD from Code"
   short_description: "Generate business-first PRDs from live UI or code"
-  default_prompt: "Use $generate-prd-from-code to generate a business-first PRD for this repository. First identify whether the current repo has enough evidence; if a frontend URL or paired frontend/backend repo is missing, ask the user before generating. If a frontend URL is available, prioritize live pages and page-level product details."
+  default_prompt: "Use $generate-prd-from-code to generate a business-first PRD for this workspace. First identify whether the available evidence covers the requested product scope; if the workspace contains multiple candidate projects, determine the relevant project range before writing. If a frontend URL or paired frontend/backend repo is missing, ask the user before generating. If a frontend URL is available, prioritize live pages and page-level product details."
