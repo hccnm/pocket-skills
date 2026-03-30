@@ -641,7 +641,7 @@ def install_skill(skill: SkillInfo, tool_key: str, verbose: bool = True) -> Inst
                 error=f"源目录不存在: {skill_source}",
             )
 
-        # 平台目录只提供适配后的 SKILL.md，scripts/references 等资源默认来自 skill 根目录
+        # 平台目录只提供适配后的 SKILL.md，其余共享资源默认来自 skill 根目录
         skill_file = skill_source / "SKILL.md"
 
         if verbose:

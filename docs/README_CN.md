@@ -6,7 +6,7 @@
 
 ## 为什么选择 Pocket Skills？
 
-- **自包含** — 每个技能自带脚本、参考文档和平台适配器
+- **自包含** — 每个技能自带说明文档、参考资料和平台适配器
 - **多平台** — 支持 Claude Code、Cursor、Codex 和 Gemini CLI
 - **一键安装** — 交互式安装器，复选框选择
 - **可验证输出** — 技能产生结构化、可验证的输出结果
@@ -17,14 +17,14 @@
 
 从代码库逆向工程，生成业务导向的 PRD（产品需求文档）。支持两种模式：
 
-- **纯代码模式** — 分析仓库结构、路由、服务和实体，推断产品范围
-- **前端增强模式** — 爬取线上 UI 捕获页面、字段和流程，再追溯到后端逻辑，形成完整的前后端闭环
+- **源码驱动模式** — 直接探索仓库结构、路由、服务、实体、菜单和文档，推断产品范围
+- **前端增强模式** — 采集运行中 UI 的页面、字段和流程，再追溯到源码逻辑，形成完整的前后端闭环
 
 输出：AI 上下文概览 + 主 PRD + 各模块附录 + 覆盖检查清单。
 
 ### [project-md-reconstructor](../skills/project-md-reconstructor/SKILL.md)
 
-复现 OpenSpec 的 `project.md` 工作流 — 扫描现有仓库，生成一个复用感知的 `docs/project.md`，涵盖技术栈、编码规范、架构模式、约束条件和可复用构建块。
+复现 OpenSpec 的 `project.md` 工作流，但会先判断当前仓库是前端、后端、前后端同仓还是暂时不清晰，再生成复用感知的 `docs/project.md` 以及与当前项目类型匹配的技术文档。
 
 ## 快速开始
 
@@ -47,7 +47,7 @@ python3 install.py
 # 从当前项目生成 PRD
 /pocket-generate-prd-from-code
 
-# 从当前项目生成 docs/project.md
+# 从当前项目生成 docs/project.md 和匹配的技术文档
 /pocket-project-md-reconstructor
 ```
 
@@ -113,20 +113,13 @@ python3 install.py --help
 
 ## 手动使用
 
-也可以不通过安装器，直接运行脚本：
+也可以不通过安装器，直接在目标代码仓库中使用技能：
 
-```bash
-cd skills/generate-prd-from-code
-
-# 检测技术栈
-python3 scripts/detect_stack.py --repo /path/to/your/repo --pretty
-
-# 提取仓库信息
-python3 scripts/extract_repo_facts.py --repo /path/to/your/repo --output /tmp/repo-facts.json
-
-# 合并证据生成 PRD
-python3 scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-dir /path/to/your/repo/docs/prd --language zh
-```
+1. 用你的 coding agent 打开目标仓库。
+2. 调用 `generate-prd-from-code`。
+3. 让 agent 先判断当前证据是否足够。
+4. 如果有运行中的前端地址，补充 frontend URL 以便采集实时页面证据。
+5. 查看生成在 `docs/prd/` 下的结果。
 
 ## 仓库结构
 
@@ -136,7 +129,6 @@ pocket-skills/
 │   ├── generate-prd-from-code/
 │   │   ├── SKILL.md                 # 技能定义
 │   │   ├── references/              # 模板与规则
-│   │   ├── scripts/                 # Python 脚本
 │   │   └── platforms/               # 平台适配器
 │   │       ├── claude-code/
 │   │       ├── cursor/
@@ -145,7 +137,6 @@ pocket-skills/
 │   └── project-md-reconstructor/
 │       ├── SKILL.md
 │       ├── references/
-│       ├── scripts/
 │       └── platforms/
 ├── install.py                       # 安装器
 ├── install.sh / install.bat         # 启动脚本
@@ -156,13 +147,13 @@ pocket-skills/
 
 1. 在 `skills/` 下创建目录（使用 kebab-case 命名）
 2. 添加带 YAML frontmatter 的 `SKILL.md`
-3. 按需添加 `scripts/`、`references/`、`platforms/`
+3. 按需添加技能真正需要的支撑资源，例如 `references/`、`platforms/`、`agents/`，以及可选的 `scripts/`
 4. 安装器会自动发现新技能
 
 ## 贡献
 
-欢迎贡献！详情请参阅 [CONTRIBUTING.md](../CONTRIBUTING.md)。
+欢迎贡献，详情请参阅 [CONTRIBUTING.md](../CONTRIBUTING.md)。
 
 ## 许可证
 
-MIT 许可证 - 详情请参阅 [LICENSE](../LICENSE)。
+MIT 许可证，详情请参阅 [LICENSE](../LICENSE)。

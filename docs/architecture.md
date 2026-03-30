@@ -9,15 +9,16 @@ Each skill is a complete, standalone unit:
 | Component | Purpose |
 |-----------|---------|
 | `SKILL.md` | Main entry point with instructions for AI agents |
-| `scripts/` | Automation scripts (stack detection, extraction, merging) |
-| `references/` | Templates, rules, and examples |
+| `references/` | Templates, rules, examples, and shared guidance |
 | `platforms/` | Platform-specific adapters |
+| `agents/` | Optional platform metadata or prompts |
+| `scripts/` | Optional helper automation for skills that still need it |
 
 ### 2. Shared Within Skill, Not Across
 
 Skills do not share resources with each other:
 
-- Each skill can be independently installed / updated
+- Each skill can be independently installed or updated
 - No cross-skill dependencies
 - Simple, predictable structure
 
@@ -25,13 +26,13 @@ Skills do not share resources with each other:
 
 Lightweight wrappers that:
 
-- Reference the main skill's resources via relative paths (`../../scripts/`, `../../references/`)
-- Add platform-specific configurations
-- Maintain consistent output contracts
+- specialize the main skill workflow for a specific tool
+- reference the main skill's resources via relative paths when needed
+- maintain consistent output contracts
 
 ### 4. Command Naming
 
-- **Installed commands** use a `pocket-` prefix (e.g., `pocket-generate-prd-from-code`)
+- **Installed commands** use a `pocket-` prefix (for example `pocket-generate-prd-from-code`)
 - **Source directories** under `skills/` keep original kebab-case names
 
 ## Directory Structure
@@ -42,7 +43,8 @@ pocket-skills/
 │   └── [skill-name]/
 │       ├── SKILL.md               # Universal skill definition
 │       ├── references/            # Templates, rules, examples
-│       ├── scripts/               # Automation scripts
+│       ├── agents/                # Optional metadata
+│       ├── scripts/               # Optional helper scripts
 │       └── platforms/
 │           ├── claude-code/       # Claude Code adapter
 │           ├── cursor/            # Cursor adapter + .cursorrules
@@ -58,9 +60,9 @@ pocket-skills/
 
 From within a platform adapter directory:
 
-```
-../../scripts/      → Main skill scripts
-../../references/   → Main skill templates & rules
+```text
+../../references/   → Main skill templates and rules
+../../agents/       → Optional platform metadata
 ../../SKILL.md      → Main skill entry point
 ```
 
@@ -68,8 +70,8 @@ From within a platform adapter directory:
 
 The `install.py` installer:
 
-1. **Auto-discovers** all skills under `skills/` (no config needed)
-2. **Copies** skill files to platform-specific locations
+1. **Auto-discovers** all skills under `skills/`
+2. **Copies** each skill's self-contained resources into platform-specific locations
 3. **Prefixes** installed commands with `pocket-`
 4. **Supports** install, uninstall, interactive, and CLI modes
 
@@ -82,8 +84,8 @@ The `install.py` installer:
 
 ## Adding New Skills
 
-1. Create directory under `skills/`
+1. Create a directory under `skills/`
 2. Add `SKILL.md` with YAML frontmatter (`name`, `description`)
-3. Add supporting files (`scripts/`, `references/`)
+3. Add the supporting resources the skill actually needs
 4. Add platform adapters under `platforms/`
-5. Installer auto-discovers — no other config changes needed
+5. Installer auto-discovers the skill with no extra config

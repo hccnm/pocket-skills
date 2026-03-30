@@ -12,37 +12,38 @@ The system SHALL provide a `.cursorrules` file that defines the complete workflo
 
 #### Scenario: User executes generate-prd-from-code without frontend URL
 - **WHEN** user runs the skill without providing a frontend URL
-- **THEN** the system executes `detect_stack.py`, `extract_repo_facts.py`, and `merge_evidence.py` scripts in sequence
+- **THEN** the system explores repository files and documentation directly
 - **AND** generates AI context overview, main PRD, and module appendices in `docs/prd/` directory
 
 #### Scenario: User executes generate-prd-from-code with frontend URL
 - **WHEN** user provides a running frontend URL
 - **THEN** the system captures all visible leaf menu items and page structure
 - **AND** traces network requests to backend routes
-- **AND** merges frontend evidence with codebase facts to generate an enhanced PRD
+- **AND** combines live UI evidence with source evidence to generate an enhanced PRD
 
-### Requirement: Shared Engine Reuse
+### Requirement: Agent-Native Evidence Collection
 
-The system SHALL reuse shared scripts from `../../core/scripts/` directory without modification.
+The system SHALL use agent-native repository exploration instead of external extraction scripts.
 
-#### Scenario: Tech stack detection
+#### Scenario: Workspace scope detection
 - **WHEN** user initiates PRD generation
-- **THEN** the system calls `../../core/scripts/detect_stack.py` to identify the codebase's tech stack
-- **AND** uses detection results to guide subsequent analysis
+- **THEN** the system identifies whether the workspace is frontend-only, backend-only, full-stack, multi-project, or unclear
+- **AND** uses that result to decide whether more evidence or a user confirmation is required
 
-#### Scenario: Codebase facts extraction
-- **WHEN** tech stack detection completes
-- **THEN** the system calls `../../core/scripts/extract_repo_facts.py` to extract controllers, services, entities, and documentation
-- **AND** outputs structured JSON fact data for PRD generation
+#### Scenario: Repository fact collection
+- **WHEN** the target scope is clear enough
+- **THEN** the system inspects routes, pages, services, entities, menus, docs, and other source signals directly
+- **AND** builds a module and page inventory before writing PRD content
 
-#### Scenario: Evidence merging
-- **WHEN** codebase facts (and optional frontend evidence) are ready
-- **THEN** the system calls `../../core/scripts/merge_evidence.py` to generate final PRD documents
+#### Scenario: Evidence synthesis
+- **WHEN** code evidence and optional frontend evidence are ready
+- **THEN** the system writes final PRD documents directly
+- **AND** does not require intermediate JSON fact files
 - **AND** uses Chinese output by default unless otherwise specified
 
 ### Requirement: Output Contract Compliance
 
-The system SHALL generate PRD documents that comply with the output contract defined in `core/references/prd-template.md`.
+The system SHALL generate PRD documents that comply with the output contract defined in `references/prd-template.md`.
 
 #### Scenario: Main PRD generation
 - **WHEN** PRD generation completes
@@ -54,14 +55,14 @@ The system SHALL generate PRD documents that comply with the output contract def
 
 ### Requirement: Evidence Rules Compliance
 
-The system SHALL follow the evidence rules defined in `core/references/evidence-rules.md`.
+The system SHALL follow the evidence rules defined in `references/evidence-rules.md`.
 
 #### Scenario: Frontend evidence priority
 - **WHEN** a frontend URL is provided
 - **THEN** the system uses page facts as primary product evidence
-- **AND** uses code and documentation to supplement hidden business rules
+- **AND** uses source code and documentation to supplement hidden business rules
 
 #### Scenario: Inference transparency
 - **WHEN** the system cannot fully verify a conclusion
 - **THEN** the conclusion is explicitly noted in the "Assumptions & Items to Confirm" section
-- **AND** the inference source (UI, code, or documentation) is recorded
+- **AND** the inference source is recorded as live UI, frontend source, backend source, docs, or inference

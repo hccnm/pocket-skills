@@ -61,21 +61,21 @@ The installer SHALL detect existing installations and prompt appropriately.
 - **AND** the system SHALL display "Updating..." status upon confirmation
 - **AND** the system SHALL NOT proceed without user confirmation
 
-### Requirement: Shared Resources Installation
+### Requirement: Self-Contained Resource Installation
 
-The installer SHALL include shared resources (core scripts and references) within each skill directory for self-contained installation.
+The installer SHALL preserve each skill's self-contained resource layout inside the installed skill directory.
 
 #### Scenario: Self-contained skill installation
 
 - **WHEN** the installer installs a skill to a tool directory
-- **THEN** the system SHALL create `core/scripts/` within the skill directory
-- **AND** the system SHALL create `core/references/` within the skill directory
-- **AND** the skill directory SHALL be fully self-contained with no external dependencies
+- **THEN** the system SHALL copy the skill's `SKILL.md`
+- **AND** the system SHALL copy any supporting resources present in the source skill, such as `references/`, `platforms/`, `agents/`, or optional `scripts/`
+- **AND** the installed skill SHALL be self-contained with no dependency on the original repository
 
 #### Scenario: Skill path configuration
 
 - **WHEN** the installer copies skill files
-- **THEN** the system SHALL update paths in SKILL.md from `../../core/` to `./core/`
+- **THEN** the system SHALL rewrite internal paths in `SKILL.md` as needed for the installed location
 - **AND** the skill SHALL work correctly without the original repository
 - **AND** the skill SHALL NOT depend on any files outside its directory
 

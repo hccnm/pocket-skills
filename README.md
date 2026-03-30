@@ -6,7 +6,7 @@ A curated collection of AI-friendly skills for code analysis, documentation gene
 
 ## Why Pocket Skills?
 
-- **Self-contained** — Each skill bundles its own scripts, references, and platform adapters
+- **Self-contained** — Each skill bundles its own instructions, references, and platform adapters
 - **Multi-platform** — Works with Claude Code, Cursor, Codex, and Gemini CLI
 - **One-command install** — Interactive installer with checkbox selection
 - **Evidence-backed** — Skills produce structured, verifiable outputs
@@ -17,14 +17,14 @@ A curated collection of AI-friendly skills for code analysis, documentation gene
 
 Reverse-engineer a codebase into a business-first PRD (Product Requirement Document). Supports two modes:
 
-- **Code-only** — Analyze repository structure, routes, services, and entities to infer product scope
-- **Frontend-enhanced** — Crawl a live UI to capture pages, fields, and flows, then trace them back to backend logic for a complete frontend-backend closed loop
+- **Source-driven** — Explore repository structure, routes, services, entities, menus, and docs directly to infer product scope
+- **Frontend-enhanced** — Crawl a live UI to capture pages, fields, and flows, then trace them back to source logic for a complete frontend-backend closed loop
 
 Output: AI context overview + main PRD + per-module appendices + coverage checklist.
 
 ### [project-md-reconstructor](skills/project-md-reconstructor/SKILL.md)
 
-Recreate the OpenSpec `project.md` workflow — scan an existing repository and generate a reuse-aware `docs/project.md` covering tech stack, conventions, architecture patterns, constraints, and reusable building blocks.
+Recreate the OpenSpec `project.md` workflow for the current repository — first classify the workspace as frontend, backend, full-stack, or unclear, then generate a reuse-aware `docs/project.md` plus only the matching technical document(s) for the detected side.
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ python3 install.py
 # Generate a PRD from the current project
 /pocket-generate-prd-from-code
 
-# Generate docs/project.md from the current project
+# Generate docs/project.md and the matching technical doc(s) from the current project
 /pocket-project-md-reconstructor
 ```
 
@@ -113,20 +113,13 @@ python3 install.py --help
 
 ## Manual Usage
 
-Scripts can be run directly without the installer:
+Skills can also be used without the installer:
 
-```bash
-cd skills/generate-prd-from-code
-
-# Detect tech stack
-python3 scripts/detect_stack.py --repo /path/to/your/repo --pretty
-
-# Extract repository facts
-python3 scripts/extract_repo_facts.py --repo /path/to/your/repo --output /tmp/repo-facts.json
-
-# Merge evidence into PRD
-python3 scripts/merge_evidence.py --facts /tmp/repo-facts.json --output-dir /path/to/your/repo/docs/prd --language zh
-```
+1. Open the target repository in your coding agent.
+2. Invoke `generate-prd-from-code`.
+3. Let the agent inspect the workspace first and decide whether the currently available evidence is enough.
+4. If a frontend URL is available, provide it so the agent can capture live page evidence.
+5. Review the generated files under `docs/prd/`.
 
 ## Repository Layout
 
@@ -136,7 +129,6 @@ pocket-skills/
 │   ├── generate-prd-from-code/
 │   │   ├── SKILL.md                 # Skill definition
 │   │   ├── references/              # Templates & rules
-│   │   ├── scripts/                 # Python scripts
 │   │   └── platforms/               # Platform adapters
 │   │       ├── claude-code/
 │   │       ├── cursor/
@@ -145,7 +137,6 @@ pocket-skills/
 │   └── project-md-reconstructor/
 │       ├── SKILL.md
 │       ├── references/
-│       ├── scripts/
 │       └── platforms/
 ├── install.py                       # Installer
 ├── install.sh / install.bat         # Launchers
@@ -156,7 +147,7 @@ pocket-skills/
 
 1. Create a directory under `skills/` (kebab-case naming)
 2. Add `SKILL.md` with YAML frontmatter
-3. Add `scripts/`, `references/`, `platforms/` as needed
+3. Add the supporting resources the skill actually needs, such as `references/`, `platforms/`, `agents/`, or optional `scripts/`
 4. The installer auto-discovers new skills
 
 ## Contributing
