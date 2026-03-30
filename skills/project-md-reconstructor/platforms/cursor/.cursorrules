@@ -2,11 +2,16 @@
 
 Also read:
 - `../../references/project-template.md`
+- `../../references/frontend-tech-template.md`
+- `../../references/backend-tech-template.md`
 - `../../references/scanning-rules.md`
 
 Goal:
-- create or update `docs/project.md`
-- keep the fixed template structure
-- fill it from repository evidence
+- classify the current repository as frontend, backend, full-stack, or unclear before writing anything
+- always create or update `docs/project.md`
+- only create or update `docs/project-frontend-tech.md` for frontend or full-stack repositories
+- only create or update `docs/project-backend-tech.md` for backend or full-stack repositories
 - explicitly document reusable building blocks and extension points so future work reuses existing structures
+- keep frontend and backend technical details in separate files
+- if the project type is unclear, update only `docs/project.md` and list missing evidence
 - prefer evidence-backed statements and mark unclear conclusions as inferred or unknown

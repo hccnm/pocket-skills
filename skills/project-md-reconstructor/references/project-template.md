@@ -1,31 +1,37 @@
-# Project Context
+# 项目上下文
 
-## Purpose
-[Describe your project's purpose and goals]
+## 当前项目类型
+[说明当前仓库被判定为前端、后端、前后端同仓，还是暂时无法确认，并总结判定依据。]
 
-## Tech Stack
-- [List your primary technologies]
-- [e.g., TypeScript, React, Node.js]
+## 项目目的
+[说明项目要解决什么问题，以及它承担的核心职责。]
 
-## Project Conventions
+## 技术栈
+- [列出主要语言、框架、运行时、构建工具和包管理器]
+- [例如：TypeScript、React、Node.js]
 
-### Code Style
-[Describe your code style preferences, formatting rules, and naming conventions]
+## 项目约定
 
-### Architecture Patterns
-[Document your architectural decisions and patterns]
+### 代码风格
+[说明仓库中实际可见的命名、目录组织、抽象方式、格式化或约定。]
 
-### Testing Strategy
-[Explain your testing approach and requirements]
+### 架构模式
+[说明仓库采用的架构分层、模块边界、调用方式和关键设计模式。]
 
-### Git Workflow
-[Describe your branching strategy and commit conventions]
+### 测试策略
+[说明已有测试方式、验证手段以及明显缺口。]
 
-## Domain Context
-[Add domain-specific knowledge that AI assistants need to understand]
+### Git 工作流
+[只记录仓库中有明确证据支持的分支、提交或协作约定。]
 
-## Important Constraints
-[List any technical, business, or regulatory constraints]
+## 领域上下文
+[补充 AI 助手需要理解的领域概念、核心对象和业务术语。]
 
-## External Dependencies
-[Document key external services, APIs, or systems]
+## 重要约束
+[列出技术、业务、兼容性、平台或实现层面的关键约束。]
+
+## 外部依赖
+[记录关键外部服务、API、数据库、中间件或系统能力。]
+
+## 本次生成的技术文档
+[说明本次生成了哪些技术文档，以及为什么只生成这些文档。]
