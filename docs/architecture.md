@@ -22,6 +22,12 @@ Skills do not share resources with each other:
 - No cross-skill dependencies
 - Simple, predictable structure
 
+This also applies to multi-step workflows:
+
+- a workflow may be split into several stage-specific skills
+- each stage still keeps its own `references/` and `platforms/`
+- stages coordinate through the target repository state, not through shared source-side assets
+
 ### 3. Platform Adapters
 
 Lightweight wrappers that:
@@ -55,6 +61,17 @@ pocket-skills/
 ├── install.bat                    # Windows launcher
 └── docs/                          # Documentation
 ```
+
+Example: `pocket-copilot` is modeled as six independent workflow skills:
+
+- `copilot-init`
+- `copilot-propose`
+- `copilot-apply`
+- `copilot-fix`
+- `copilot-review`
+- `copilot-archive`
+
+They do not share source-side template folders. Instead, they collaborate through the initialized `pocket-copilot/` directory inside the target repository.
 
 ## Path Conventions
 

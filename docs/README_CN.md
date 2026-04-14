@@ -26,6 +26,21 @@
 
 复现 OpenSpec 的 `project.md` 工作流，但会先判断当前仓库是前端、后端、前后端同仓还是暂时不清晰，再生成复用感知的 `docs/project.md` 以及与当前项目类型匹配的技术文档。
 
+### Pocket Copilot 工作流 Skills
+
+一组面向目标仓库的六阶段渐进式 Spec 工作流：
+
+- [`copilot-init`](../skills/copilot-init/SKILL.md) — 初始化 `pocket-copilot/`，安全合并模板并预填基础上下文
+- [`copilot-propose`](../skills/copilot-propose/SKILL.md) — 为某个 change 生成 `spec.md`、`tasks.md`、`log.md`
+- [`copilot-apply`](../skills/copilot-apply/SKILL.md) — 严格按提案执行实现并展示验证证据
+- [`copilot-fix`](../skills/copilot-fix/SKILL.md) — 对既有 change 做增量修正并同步文档
+- [`copilot-review`](../skills/copilot-review/SKILL.md) — 先做 spec 合规审查，再做代码质量审查
+- [`copilot-archive`](../skills/copilot-archive/SKILL.md) — 提取知识、总结踩坑并归档完成的 change
+
+推荐顺序：
+
+`pocket-copilot-init -> pocket-copilot-propose -> pocket-copilot-apply -> pocket-copilot-fix -> pocket-copilot-review -> pocket-copilot-archive`
+
 ## 快速开始
 
 ### 1. 安装
@@ -49,6 +64,16 @@ python3 install.py
 
 # 从当前项目生成 docs/project.md 和匹配的技术文档
 /pocket-project-md-reconstructor
+
+# 初始化 pocket-copilot 工作流目录
+/pocket-copilot-init
+
+# 执行完整的 pocket-copilot 工作流
+/pocket-copilot-propose
+/pocket-copilot-apply
+/pocket-copilot-fix
+/pocket-copilot-review
+/pocket-copilot-archive
 ```
 
 ### 3. 在 Cursor 中使用
@@ -121,6 +146,23 @@ python3 install.py --help
 4. 如果有运行中的前端地址，补充 frontend URL 以便采集实时页面证据。
 5. 查看生成在 `docs/prd/` 下的结果。
 
+对于 `pocket-copilot` 工作流 skills，目标仓库中会维护：
+
+```text
+pocket-copilot/
+├── rules/
+├── knowledge/
+├── agents/
+├── changes/templates/
+└── archives/
+```
+
+`pocket-copilot-init` 具备幂等与安全合并特性：
+
+- 只创建缺失的目录和文件
+- 不覆盖已有文件
+- 结束时输出 `created / skipped / needs-manual-review`
+
 ## 仓库结构
 
 ```text
@@ -138,6 +180,12 @@ pocket-skills/
 │       ├── SKILL.md
 │       ├── references/
 │       └── platforms/
+│   ├── copilot-init/
+│   ├── copilot-propose/
+│   ├── copilot-apply/
+│   ├── copilot-fix/
+│   ├── copilot-review/
+│   └── copilot-archive/
 ├── install.py                       # 安装器
 ├── install.sh / install.bat         # 启动脚本
 └── docs/                            # 文档

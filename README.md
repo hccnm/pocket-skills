@@ -26,6 +26,21 @@ Output: AI context overview + main PRD + per-module appendices + coverage checkl
 
 Recreate the OpenSpec `project.md` workflow for the current repository — first classify the workspace as frontend, backend, full-stack, or unclear, then generate a reuse-aware `docs/project.md` plus only the matching technical document(s) for the detected side.
 
+### Pocket Copilot Workflow Skills
+
+A six-stage workflow for progressive Spec-driven collaboration inside a target repository:
+
+- [`copilot-init`](skills/copilot-init/SKILL.md) — initialize `pocket-copilot/` with safe-merge templates and prefilled context
+- [`copilot-propose`](skills/copilot-propose/SKILL.md) — create `spec.md`, `tasks.md`, and `log.md` for a change
+- [`copilot-apply`](skills/copilot-apply/SKILL.md) — execute tasks strictly against the prepared plan
+- [`copilot-fix`](skills/copilot-fix/SKILL.md) — perform incremental post-review fixes and sync docs
+- [`copilot-review`](skills/copilot-review/SKILL.md) — run two-phase review: spec compliance, then code quality
+- [`copilot-archive`](skills/copilot-archive/SKILL.md) — extract reusable knowledge and archive the finished change
+
+Recommended order:
+
+`pocket-copilot-init -> pocket-copilot-propose -> pocket-copilot-apply -> pocket-copilot-fix -> pocket-copilot-review -> pocket-copilot-archive`
+
 ## Quick Start
 
 ### 1. Install
@@ -49,6 +64,16 @@ python3 install.py
 
 # Generate docs/project.md and the matching technical doc(s) from the current project
 /pocket-project-md-reconstructor
+
+# Initialize pocket-copilot in the current repository
+/pocket-copilot-init
+
+# Create a change proposal and then execute the workflow
+/pocket-copilot-propose
+/pocket-copilot-apply
+/pocket-copilot-fix
+/pocket-copilot-review
+/pocket-copilot-archive
 ```
 
 ### 3. Use in Cursor
@@ -121,6 +146,23 @@ Skills can also be used without the installer:
 4. If a frontend URL is available, provide it so the agent can capture live page evidence.
 5. Review the generated files under `docs/prd/`.
 
+For the `pocket-copilot` workflow skills, the target repository will contain:
+
+```text
+pocket-copilot/
+├── rules/
+├── knowledge/
+├── agents/
+├── changes/templates/
+└── archives/
+```
+
+`pocket-copilot-init` is idempotent by design:
+
+- it creates only missing directories and files
+- it does not overwrite existing files
+- it reports `created / skipped / needs-manual-review`
+
 ## Repository Layout
 
 ```text
@@ -138,6 +180,12 @@ pocket-skills/
 │       ├── SKILL.md
 │       ├── references/
 │       └── platforms/
+│   ├── copilot-init/
+│   ├── copilot-propose/
+│   ├── copilot-apply/
+│   ├── copilot-fix/
+│   ├── copilot-review/
+│   └── copilot-archive/
 ├── install.py                       # Installer
 ├── install.sh / install.bat         # Launchers
 └── docs/                            # Documentation
