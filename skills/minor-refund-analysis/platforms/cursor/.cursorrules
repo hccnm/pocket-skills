@@ -1,0 +1,11 @@
+# Minor Refund Analysis
+
+Also read:
+- `../../references/api.md`
+- `../../references/analysis-rules.md`
+
+Goal:
+- generate a standardized 未成年人退款行为分析说明 from downstream-returned account data
+- keep conclusions at the behavior-analysis level, not age determination
+- use returned data as-is instead of guessing time windows
+- use only enriched calendar fields returned by the API (`weekdayCn`, `isHoliday`, `holidayName`, `isAdjustedWorkday`); do not compute dates locally
