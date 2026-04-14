@@ -1,0 +1,11 @@
+# Pocket Copilot Review
+
+Also read:
+- `../../references/spec-compliance-checklist.md`
+- `../../references/code-quality-checklist.md`
+
+Goal:
+- review an existing `pocket-copilot` change in two phases
+- run phase 1 first, then phase 2 only if phase 1 passes
+- keep the output explicitly split by phase
+- return a clear PASS / FAIL conclusion

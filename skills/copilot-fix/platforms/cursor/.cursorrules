@@ -1,0 +1,10 @@
+# Pocket Copilot Fix
+
+Also read:
+- `../../references/fix-contract.md`
+
+Goal:
+- fix an existing `pocket-copilot` change incrementally
+- update plan documents before code when they are stale
+- sync `spec.md`, `tasks.md`, and `log.md`
+- keep the fix scope targeted and explicit

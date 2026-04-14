@@ -1,0 +1,10 @@
+# Pocket Copilot Archive
+
+Also read:
+- `../../references/archive-contract.md`
+
+Goal:
+- archive an existing `pocket-copilot` change
+- extract reusable knowledge from `log.md`
+- write or suggest knowledge entries
+- move the change to `pocket-copilot/archives/<change-name>/`

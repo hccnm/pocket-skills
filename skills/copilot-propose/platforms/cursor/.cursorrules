@@ -1,0 +1,12 @@
+# Pocket Copilot Propose
+
+Also read:
+- `../../references/propose-contract.md`
+
+Goal:
+- create `pocket-copilot/changes/<change-name>/spec.md`
+- create `pocket-copilot/changes/<change-name>/tasks.md`
+- create `pocket-copilot/changes/<change-name>/log.md`
+- research before planning
+- cite repository evidence for current-state findings
+- block apply when unresolved questions remain

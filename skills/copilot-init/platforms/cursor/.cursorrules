@@ -1,0 +1,23 @@
+# Pocket Copilot Init
+
+Also read:
+- `../../references/project-context-template.md`
+- `../../references/coding-style-template.md`
+- `../../references/security-template.md`
+- `../../references/domain-rules-template.md`
+- `../../references/knowledge-index-template.md`
+- `../../references/copilot-prompt-template.md`
+- `../../references/spec-reviewer-template.md`
+- `../../references/code-quality-reviewer-template.md`
+- `../../references/change-spec-template.md`
+- `../../references/change-tasks-template.md`
+- `../../references/change-test-spec-template.md`
+- `../../references/change-log-template.md`
+
+Goal:
+- initialize `pocket-copilot/` in the current repository
+- create only missing directories and files
+- never overwrite existing files
+- prefill `rules/project-context.md` and base rule files from repository evidence when possible
+- keep unknown items explicitly marked as `待补充`
+- end with `created / skipped / needs-manual-review`
